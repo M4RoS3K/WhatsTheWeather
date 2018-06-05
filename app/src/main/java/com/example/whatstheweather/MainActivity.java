@@ -1,53 +1,68 @@
 package com.example.whatstheweather;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
+
 public class MainActivity extends AppCompatActivity {
 
-    private TextView txt_city;
-    private TextView txt_output;
+    protected String APIKey = "e09bb3372e629954725a8095a8e46b34";
+    protected EditText txt_city;
+    protected TextView txt_output;
 
     public void getWeather(View view){
-
         DownloadTask task = new DownloadTask();
-        final String APIKey = "e09bb3372e629954725a8095a8e46b34";
         final Animation shake = AnimationUtils.loadAnimation(this, R.anim.shake);
 
-        if (txt_city.getText().length() == 0){
-            txt_city.startAnimation(shake);
-        } else {
-            try{
-                String city = txt_city.getText().toString();
-                String json = task.execute("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + APIKey).get();
-                JSONObject JObj = new JSONObject(json);
-                String weatherData = JObj.getString("weather");
-                Log.i("weather data", weatherData);
-                JSONArray arr = new JSONArray(weatherData);
-                String main = "";
-                String description = "";
+        // to hide keyboard, when this method is called
+        InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        mgr.hideSoftInputFromWindow(txt_city.getWindowToken(), 0);
 
+        try {
+            if (txt_city.getText().toString().equals("")) {
+                txt_city.startAnimation(shake);
+            } else {
+                String city = URLEncoder.encode(txt_city.getText().toString(), "UTF-8");
+                String json = task.execute("http://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=metric&appid=" + APIKey).get();
+                JSONObject jObj = new JSONObject(json);
+                String weatherData = jObj.getString("weather");
+                JSONArray arrWeather = new JSONArray(weatherData);
+                String message = "";
 
-                for(int i = 0; i < arr.length(); i++){
-                    JSONObject jsonPart = arr.getJSONObject(i);
+                for(int i = 0; i < arrWeather.length(); i++){
+                    JSONObject jPart = arrWeather.getJSONObject(i);
 
-                    main = jsonPart.getString("main");
-                    description = jsonPart.getString("description");
+                    String main = jPart.getString("main");
+                    String description = jPart.getString("description");
+
+                    if(!main.equals("") && !description.equals("")){
+                        message += main + ": " + description + "\r\n";
+                    }
                 }
 
-                txt_output.setText("main: " + main + "\ndescription: " + description);
+                Log.i("json output", json);
+                Log.i("weather data", weatherData);
 
-            } catch (Exception e){
-                e.printStackTrace();
+                if(!message.equals("")) {
+                    txt_output.setText(message);
+                }
             }
+        } catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Invalid city! Try Again", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -56,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        txt_city = (TextView) findViewById(R.id.txt_city);
+        txt_city = (EditText) findViewById(R.id.txt_city);
         txt_output = (TextView) findViewById(R.id.txt_output);
     }
 }

@@ -1,22 +1,19 @@
 package com.example.whatstheweather;
 
 import android.os.AsyncTask;
-import android.util.Log;
-
-import org.json.JSONObject;
+import android.widget.Toast;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class DownloadTask extends AsyncTask<String, Void, String> {
+public class DownloadTask extends AsyncTask<String, Void, String>{
 
     private String output = "";
 
     @Override
     protected String doInBackground(String... urls){
-
         try {
             URL url = new URL(urls[0]);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -31,8 +28,7 @@ public class DownloadTask extends AsyncTask<String, Void, String> {
             }
 
             return output;
-
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
